@@ -1,6 +1,23 @@
 const ReplicationController = require('../lib/Kubernetes/ReplicationController');
+const Cli = require('admiral-cli');
 
-ReplicationController.getAll('amp-staging')
+const cli = new Cli()
+	.option({
+		name: 'namespace',
+		description: 'k8s namespace in which to redistribute pods',
+		shortFlag: '-n',
+		longFlag: '--namespace',
+		required: true,
+		length: 1
+	})
+
+cli.parse();
+
+if (!cli.params.namespace) {
+	throw new Error('Missing required namespace param');
+}
+
+ReplicationController.getAll(cli.params.namespace)
 	.then(rcs => {
 		return Promise.all(
 			rcs.map(rc => rc.scale(1))
