@@ -9,6 +9,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "co": "^4.6.0"
+    "admiral-cli": "^0.8.0",
+    "co": "^4.6.0",
+    "lodash": "^4.6.1"
   }
 }
