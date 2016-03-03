@@ -1,4 +1,4 @@
-const ReplicationController = require('./lib/Kubernetes/ReplicationController');
+const ReplicationController = require('../lib/Kubernetes/ReplicationController');
 
 ReplicationController.getAll('amp-staging')
 	.then(rcs => {

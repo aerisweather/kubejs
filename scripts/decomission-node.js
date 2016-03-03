@@ -1,12 +1,14 @@
 const co = require('co');
-const Node = require('./lib/Kubernetes/Node');
+const Node = require('../lib/Kubernetes/Node');
+
+
+const nodeName = process.argv[2];
+if (!nodeName) { throw new Error('Missing node name arguments'); }
+
 
 function main() {
 	return co(function* () {
 		"use strict";
-
-		const nodeName = process.argv[2];
-		if (!nodeName) { throw new Error('Missing node name arguments'); }
 
 		const node = new Node(nodeName);
 
@@ -16,7 +18,7 @@ function main() {
 
 		console.log(`Locating pods on node "${nodeName}"`);
 		const pods = (yield node.getAllPods())
-			// Don't touch kube-system pods
+		// Don't touch kube-system pods
 			.filter(pod => pod.namespace !== 'kube-system');
 
 		console.log(`Rescheduling all pods on "${nodeName}"...`);
