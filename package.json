@@ -1,0 +1,11 @@
+{
+  "name": "kubejs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "kube-decomission-node.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
