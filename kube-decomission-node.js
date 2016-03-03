@@ -1,18 +1,18 @@
 const execSync = require('child_process').execSync;
 
-const node = process.argv[2];
+const nodeName = process.argv[2];
 
-if (!node) { throw new Error('No node defined'); }
+if (!nodeName) { throw new Error('No node defined'); }
 
 
 // Make node "unschedulable"
-console.log(`Making node "${node}" unschedulable`);
-execSync(`kubectl patch node ${node} -p '{"spec":{"unschedulable":true}}'`);
+console.log(`Making node "${nodeName}" unschedulable`);
+execSync(`kubectl patch node ${nodeName} -p '{"spec":{"unschedulable":true}}'`);
 
-console.log(`Locating pods on node "${node}"`);
+console.log(`Locating pods on node "${nodeName}"`);
 const pods = execSync([
 	`kubectl get pods --all-namespaces`,
-	`-o jsonpath='{range .items[?(.spec.nodeName=="${node}")]}{.metadata.namespace} {.metadata.name} {end}'`,
+	`-o jsonpath='{range .items[?(.spec.nodeName=="${nodeName}")]}{.metadata.namespace} {.metadata.name} {end}'`,
 	`| xargs -n 2`
 ].join(' '))
 	.toString('utf8')
@@ -30,7 +30,7 @@ const pods = execSync([
 
 
 // Reschedule all pods
-console.log(`Rescheduling all pods on "${node}"...`);
+console.log(`Rescheduling all pods on "${nodeName}"...`);
 pods.forEach(podObj => {
 	const rc = getPodRc(podObj.json);
 	const rcJson = JSON.parse(
@@ -65,7 +65,7 @@ waitForPodsReady()
 			execSync(`kubectl scale --replicas=${targetReplicas} rc ${rc} --namespace ${podObj.namespace}`);
 		});
 
-		console.log(`Node ${node} is decommissioned, and ready for deletion.`)
+		console.log(`Node ${nodeName} is decommissioned, and ready for deletion.`)
 		process.exit(0);
 	});
 
