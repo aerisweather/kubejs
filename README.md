@@ -42,7 +42,7 @@ An individual worker representing containers
 
 Gets the Replication Controller that created this pod.
 
-#### delete()
+#### deletePod()
 
 Deletes this pod. The Replication Controller will take of rescheduling.
 
