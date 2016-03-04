@@ -10,7 +10,7 @@ const cli = new Cli()
 		longFlag: '--namespace',
 		required: true,
 		length: 1
-	})
+	});
 
 cli.parse();
 
