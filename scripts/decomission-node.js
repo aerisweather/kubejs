@@ -38,7 +38,7 @@ function main() {
 
 			// Delete old pod
 			console.log(`Deleting pod ${pod.name}`);
-			yield pod.deletePod();
+			yield pod.delete();
 
 			// Scale rc back down
 			yield rc.scaleDelta(-1);
