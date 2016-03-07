@@ -8,6 +8,10 @@ Installation
 
 1. Ensure you have a stable version of `kubectl`
 
+1. Cloud Management (optional)
+
+	1. Install the [AWS CLI](http://docs.aws.amazon.com/cli/latest/userguide/installing.html) `sudo pip install --upgrade awscli` (working with v1.10.x)
+
 1. Clone this repository
 
 1. Run `npm install`
