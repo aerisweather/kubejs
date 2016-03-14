@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 const ReplicationController = require('../lib/Kubernetes/ReplicationController');
 const Cli = require('admiral-cli');
 

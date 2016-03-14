@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 const co = require('co');
 const Cluster = require('../lib/Kubernetes/Cluster');
 const _ = require('lodash');

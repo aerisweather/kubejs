@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 const co = require('co');
 const Node = require('../lib/Kubernetes/Node');
 const Ec2Instance = require('../lib/AWS/Ec2Instance');
