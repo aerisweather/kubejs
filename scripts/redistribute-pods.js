@@ -1,16 +1,18 @@
 #!/usr/bin/env node
+"use strict";
 const ReplicationController = require('../lib/Kubernetes/ReplicationController');
 const co = require('co');
 const Cli = require('admiral-cli');
+const _ = require('lodash');
 
 const cli = new Cli()
 	.option({
-		name: 'namespace',
+		name:        'namespace',
 		description: 'k8s namespace in which to redistribute pods',
-		shortFlag: '-n',
-		longFlag: '--namespace',
-		required: true,
-		length: 1
+		shortFlag:   '-n',
+		longFlag:    '--namespace',
+		required:    true,
+		length:      1
 	});
 
 cli.parse();
@@ -24,7 +26,19 @@ function main() {
 		const rcs = yield ReplicationController.getAll(cli.params.namespace);
 
 		// Scale up all nodes
-		yield rcs.map(rc => rc.reschedule());
+		const rcGroups = _.chunk(rcs, 5);
+
+		for (let rcGroup of rcGroups) {
+			var rescheduleOps = rcGroup
+				.filter(rc => rc.name !== 'postgres-db')
+				.reduce((ops, rc) => {
+					console.log(`Rescheduling ${rc.name}...`);
+					ops.push(rc.reschedule());
+					return ops;
+				}, []);
+			yield Promise.all(rescheduleOps);
+		}
+		console.log("Done.");
 	});
 }
 
