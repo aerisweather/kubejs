@@ -6,31 +6,64 @@ const _ = require('lodash');
 
 const cluster = new Cluster();
 
-cluster.getAllNodes()
-	.then(nodes => {
-		return Promise.all(nodes.map((node) => node.getExternalIp()));
-	})
-	.then(externalIps => {
-		const cAdvisorUrls = externalIps.map((externalIp) =>`http://${externalIp}:4194`);
-		return new CACluster(cAdvisorUrls);
-	})
-	// We now have a cAdvisor cluster to play with
-	.then(cAdvisorCluster => {
-		// Grab this ID from `kubectl get pod [pod]`.status.containerStatuses[0].containerID
-		return cAdvisorCluster.getContainerStats('docker://37ea1257b3bf4e6edee31cab87c13505666ffd1baa64673bda9e2e5140ccb506');
-	})
-	.then(cAdvisorContainers => {
-		console.log(JSON.stringify(cAdvisorContainers, null, 2))
-	})
-	.catch(err => {
-		console.log(err.stack);
-		console.log(JSON.stringify(err, null, 2));
+return co(function* () {
+	const kubeNodes = yield cluster.getAllNodes();
+
+	const extNodeIps = yield kubeNodes.map((node) => node.getExternalIp());
+	const cAdvisorUrls = extNodeIps.map((externalIp) =>`http://${externalIp}:4194`);
+	const cACluster = new CACluster(cAdvisorUrls);
+
+	// Get containers for our namespace
+	const containersPerNode = yield kubeNodes.map((node) => {
+		return node.getAllPods('amp-prod');
 	});
 
-function condenseStats(cAdvisorContainerStats) {
-	return {
-		cpu: {
+	// Alphabetical list of pods
+	const pods = _.flatten(containersPerNode).sort((a, b) => {
+		if (a.name < b.name) {
+			return -1;
+		}
+		return 1;
+	});
 
+	const podStats = yield pods.map((pod) => {
+		return pod.getContainerIds()
+			.then((containerIds) => {
+				return Promise.all(containerIds.map((containerId) => cACluster.getContainerStats(containerId)));
+			})
+			.then((containerStats) => {
+				pod._stats = containerStats;
+				return pod;
+			})
+	});
+
+	podStats.map((pod) => {
+		console.log(`${pod.name} (${pod.namespace})`);
+		pod._stats.map((stats) => {
+			const condensedStats = condenseStats(stats);
+			console.log(`\t CPU: ${condensedStats.cpu.current}\tMemHot: ${formatMem(condensedStats.memory.hot)}\t MemTotal: ${formatMem(condensedStats.memory.total)}\n`);
+		})
+	});
+})
+	.catch(err => console.error(err.stack));
+
+function condenseStats(cAdvisorContainerStats) {
+	const latestStats = _.last(cAdvisorContainerStats.stats);
+	return {
+		cpu:    {
+			current: latestStats.cpu.load_average
+		},
+		memory: {
+			total: latestStats.memory.usage,
+			hot:   latestStats.memory.working_set
 		}
 	}
+}
+
+function formatMem(memInBytes) {
+	return padRight(""+Math.round(memInBytes / 1024 / 10.24) / 100, 7, '0') + 'M';
+}
+
+function padRight(str, l, c) {
+	return str + Array(l - str.length + 1).join(c || " ")
 }

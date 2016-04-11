@@ -11,6 +11,7 @@
   "dependencies": {
     "admiral-cli": "^0.8.0",
     "co": "^4.6.0",
+    "crisp-cache": "^1.0.2",
     "lodash": "^4.6.1"
   }
 }
