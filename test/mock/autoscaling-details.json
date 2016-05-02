@@ -1,0 +1,84 @@
+{
+    "AutoScalingGroups": [
+        {
+            "AutoScalingGroupARN": "arn:aws:autoscaling:us-east-1:123456789012:autoScalingGroup:some-long-guid:autoScalingGroupName/my-auto-scaling-group", 
+            "HealthCheckGracePeriod": 600, 
+            "SuspendedProcesses": [], 
+            "DesiredCapacity": 2, 
+            "Tags": [
+                {
+                    "ResourceType": "auto-scaling-group", 
+                    "ResourceId": "my-auto-scaling-group", 
+                    "PropagateAtLaunch": true, 
+                    "Value": "my-kube-cluster", 
+                    "Key": "KubernetesCluster"
+                }, 
+                {
+                    "ResourceType": "auto-scaling-group", 
+                    "ResourceId": "my-auto-scaling-group", 
+                    "PropagateAtLaunch": true, 
+                    "Value": "kube-aws-worker", 
+                    "Key": "Name"
+                }, 
+                {
+                    "ResourceType": "auto-scaling-group", 
+                    "ResourceId": "my-auto-scaling-group", 
+                    "PropagateAtLaunch": true, 
+                    "Value": "AutoScaleWorker", 
+                    "Key": "aws:cloudformation:logical-id"
+                }, 
+                {
+                    "ResourceType": "auto-scaling-group", 
+                    "ResourceId": "my-auto-scaling-group", 
+                    "PropagateAtLaunch": true, 
+                    "Value": "arn:aws:cloudformation:us-east-1:123456789012:stack/my-kube-cluster/another-long-guid", 
+                    "Key": "aws:cloudformation:stack-id"
+                }, 
+                {
+                    "ResourceType": "auto-scaling-group", 
+                    "ResourceId": "my-auto-scaling-group", 
+                    "PropagateAtLaunch": true, 
+                    "Value": "my-kube-cluster", 
+                    "Key": "aws:cloudformation:stack-name"
+                }
+            ], 
+            "EnabledMetrics": [], 
+            "LoadBalancerNames": [], 
+            "AutoScalingGroupName": "my-auto-scaling-group", 
+            "DefaultCooldown": 300, 
+            "MinSize": 2, 
+            "Instances": [
+                {
+                    "ProtectedFromScaleIn": true, 
+                    "AvailabilityZone": "us-east-1d", 
+                    "InstanceId": "i-abc123",
+                    "HealthStatus": "Healthy", 
+                    "LifecycleState": "InService", 
+                    "LaunchConfigurationName": "my-kube-cluster-m4xL-HighMem"
+                }, 
+                {
+                    "ProtectedFromScaleIn": true, 
+                    "AvailabilityZone": "us-east-1a", 
+                    "InstanceId": "i-def456",
+                    "HealthStatus": "Healthy", 
+                    "LifecycleState": "InService", 
+                    "LaunchConfigurationName": "my-kube-cluster-m4xL-HighMem"
+                }
+            ], 
+            "MaxSize": 3, 
+            "VPCZoneIdentifier": "subnet-123,subnet-456,subnet-789",
+            "TerminationPolicies": [
+                "Default"
+            ], 
+            "LaunchConfigurationName": "my-kube-cluster-m4xL-HighMem", 
+            "CreatedTime": "2016-03-02T14:20:56.821Z", 
+            "AvailabilityZones": [
+                "us-east-1a", 
+                "us-east-1e", 
+                "us-east-1d"
+            ], 
+            "HealthCheckType": "EC2", 
+            "NewInstancesProtectedFromScaleIn": false
+        }
+    ]
+}
