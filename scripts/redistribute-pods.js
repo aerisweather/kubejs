@@ -26,7 +26,7 @@ function main() {
 		const rcs = yield ReplicationController.getAll(cli.params.namespace);
 
 		// Scale up all nodes
-		const rcGroups = _.chunk(rcs, 5);
+		const rcGroups = _.chunk(rcs, 1);
 
 		for (let rcGroup of rcGroups) {
 			var rescheduleOps = rcGroup
@@ -46,7 +46,8 @@ function main() {
 main()
 	.then(() => {
 		process.exit(0);
-	}, (err) => {
+	})
+	.catch((err) => {
 		console.error(err.name, err.stack);
 		process.exit(1);
 	});
