@@ -26,11 +26,11 @@ function main() {
 		const rcs = yield ReplicationController.getAll(cli.params.namespace);
 
 		// Scale up all nodes
-		const rcGroups = _.chunk(rcs, 1);
+		const rcGroups = _.chunk(rcs, 5);
 
 		for (let rcGroup of rcGroups) {
 			var rescheduleOps = rcGroup
-				.filter(rc => rc.name !== 'postgres-db')
+				.filter(rc => rc.name !== 'postgres-db' && !rc.name.match(/proj\-importer/))
 				.reduce((ops, rc) => {
 					console.log(`Rescheduling ${rc.name}...`);
 					ops.push(rc.reschedule());
