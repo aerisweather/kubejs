@@ -7,6 +7,7 @@ const assert = require('assert'),
 describe("AWS - AutoScalingGroup", function () {
 
 	beforeEach(() => {
+		// Don't have to whitelist EVERYTHING, that's kind of annoying, just don't screw up mocking what you want...
 		mockery.enable({
 			useCleanCache:      true,
 			warnOnReplace:      false,
