@@ -1,12 +1,21 @@
 {
   "name": "kubejs",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "",
   "main": "kube-decomission-node.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": {
+    "name": "Edan Schwartz",
+    "email": "eschwartz@aerisweather.com"
+  },
+  "contributors": [
+    {
+      "name": "Seth Miller",
+      "email": "seth@four43.com"
+    }
+  ],
   "license": "ISC",
   "dependencies": {
     "admiral-cli": "^0.8.0",
