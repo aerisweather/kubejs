@@ -41,8 +41,6 @@ function clusterCommand(group, command) {
 				})
 			]
 		});
-	cli.parse();
-	console.log(cli.params);
 }
 
 try {
