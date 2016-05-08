@@ -6,7 +6,7 @@ A Node.JS utility library for working with Kubernetes v1.x. This library provide
 Installation
 ------------
 
-1. Ensure you have a stable version of `kubectl`
+1. Ensure you have a stable version of `kubectl`, configured for your cluster (context)
 
 1. Cloud Management (optional)
 

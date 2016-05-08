@@ -1,0 +1,60 @@
+#!/usr/bin/env node
+const AdmiralCli = require('admiral-cli');
+
+const cli = new AdmiralCli()
+	.commandGroup({
+		name: 'primaryCommand',
+		description: "The available operations for KubeJS",
+		commands: [
+			new AdmiralCli.Command({
+				name: 'cluster',
+				description: 'Operations at the cluster level - redistribute pods, pods distribution',
+				callback: clusterCommand
+			}),
+			new AdmiralCli.Command({
+				name: 'node',
+				description: 'Operations at the node level - restart, decommission'
+			}),
+			new AdmiralCli.Command({
+				name: 'cAdvisor',
+				description: 'Analytics management - open, summary'
+			})
+		]
+	});
+
+function clusterCommand(group, command) {
+	cli
+		.commandGroup({
+			name: 'clusterCommand',
+			description: 'The operations available to manage a cluster of Kubernetes servers',
+			commands: [
+				new AdmiralCli.Command({
+					name: 'redistribute',
+					description: 'Redistribute pods of a given namespace across the cluster'
+				}),
+				new AdmiralCli.Command({
+					name: 'pod-summary',
+					description: 'Redistribute pods of a given namespace across the cluster',
+					callback: function(group, command) {
+						console.log("!! Pod Summary !!");
+					}
+				})
+			]
+		});
+	cli.parse();
+	console.log(cli.params);
+}
+
+try {
+	cli.parse();
+}
+catch (error) {
+	console.error(error);
+	if (error instanceof AdmiralCli.InvalidInputError) {
+		process.exit(2);
+	}
+	else if (error instanceof AdmiralCli.ConfigError) {
+		console.error('Doh, configured something wrong.', error);
+		process.exit(1);
+	}
+}
