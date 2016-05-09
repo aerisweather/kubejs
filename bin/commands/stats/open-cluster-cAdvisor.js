@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 const co = require('co');
-const Cluster = require('../lib/Kubernetes/Cluster');
-const execp = require('../lib/util/exec-promise');
+const Cluster = require('../../../lib/Kubernetes/Cluster');
+const execp = require('../../../lib/util/exec-promise');
 const _ = require('lodash');
 
 const cluster = new Cluster();

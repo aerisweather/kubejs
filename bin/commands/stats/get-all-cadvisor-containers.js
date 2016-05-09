@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 const co = require('co');
-const Cluster = require('../lib/Kubernetes/Cluster');
-const CACluster = require('../lib/cAdvisor/Cluster');
+const Cluster = require('../../../lib/Kubernetes/Cluster');
+const CACluster = require('../../../lib/cAdvisor/Cluster');
 const _ = require('lodash');
 
 const cluster = new Cluster();
