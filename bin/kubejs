@@ -41,11 +41,23 @@ function clusterCommand(cli, command) {
 			commands: [
 				new AdmiralCli.Command({
 					name: 'redistribute',
-					description: 'Redistribute pods of a given namespace across the cluster'
+					description: 'Redistribute pods of a given namespace across the cluster',
+					callback: (cli) => {
+						cli.flag({
+							name: 'namespace',
+							description: 'Which namespace of pods to redistribute',
+							shortFlag: '-n',
+							longFlag: '--namespace',
+							length: 1,
+							required: true
+						});
+						cli.parse();
+						console.log(cli.params.namespace);
+					}
 				}),
 				new AdmiralCli.Command({
-					name: 'pod-summary',
-					description: 'Redistribute pods of a given namespace across the cluster',
+					name: 'summary',
+					description: 'A quick summary of which pods are what nodes',
 					callback: () => require('./commands/cluster/pods-per-node')
 				}),
 				new AdmiralCli.Command({
@@ -91,6 +103,7 @@ function statsCommand(cli, command) {
 
 try {
 	cli.parse();
+	console.log(cli.params);
 }
 catch (error) {
 	if (error instanceof AdmiralCli.InvalidInputError) {

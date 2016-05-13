@@ -15,7 +15,7 @@ return co(function* () {
 
 	// Get containers for our namespace
 	const containersPerNode = yield kubeNodes.map((node) => {
-		return node.getAllPods('amp-prod');
+		return node.getAllPods('amp-staging');
 	});
 
 	// Alphabetical list of pods
