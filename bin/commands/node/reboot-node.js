@@ -1,30 +1,12 @@
 #!/usr/bin/env node
 const co = require('co');
-const Node = require('../lib/Kubernetes/Node');
-const Ec2Instance = require('../lib/AWS/Ec2Instance');
-const ReplicationControllers = require('../lib/Kubernetes/ReplicationController');
-const waitUntil = require('../lib/util/waitUntil');
+const Node = require('../../../lib/Kubernetes/Node');
+const Ec2Instance = require('../../../lib/AWS/Ec2Instance');
+const ReplicationControllers = require('../../../lib/Kubernetes/ReplicationController');
+const waitUntil = require('../../../lib/util/waitUntil');
 const Cli = require('admiral-cli');
 
-const cli = new Cli({ exitOnHelp: true })
-	.option({
-		name: 'namespace',
-		description: 'k8s namespace in which pods will be redistributed',
-		longFlag: '--namespace',
-		required: true,
-		length: 1
-	})
-	.option({
-		name: 'node',
-		description: 'Node to restart',
-		longFlag: '--node',
-		required: true,
-		length: 1
-	});
-
-cli.parse();
-
-function main() {
+module.exports = function main(node, namespace) {
 	return co(function* () {
 	  const node = new Node(cli.params.node);
 
@@ -54,15 +36,6 @@ function main() {
 
 		console.log(`Reboot of node "${node.name}" complete.`);
 	});
-}
-
-
-main()
-	.then(() => {
-		process.exit(0);
-	}, (err) => {
-		console.error(err.name, err.stack);
-		process.exit(1);
-	});
+};
 
 

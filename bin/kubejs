@@ -8,24 +8,13 @@ const cli = new AdmiralCli({
 		name: 'primaryCommand',
 		description: "The available operations for KubeJS",
 		commands: [
-			new AdmiralCli.Command({
-				name: 'cluster',
-				description: 'Operations at the cluster level - redistribute pods, pod summary',
-				callback: clusterCommand
-			}),
-			new AdmiralCli.Command({
-				name: 'node',
-				description: 'Operations at the node level - restart, decommission'
-			}),
-			new AdmiralCli.Command({
-				name: 'stats',
-				description: 'Analytics management - open, summary',
-				callback: statsCommand
-			}),
+			getClusterCommand(),
+			getNodeCommands(),
+			getStatsCommand(),
 			new AdmiralCli.Command({
 				name: '--help',
 				description: 'Shows this help text, use `kubejs [primaryCommand] --help to get more info on sub-commands',
-				callback: function(cli) {
+				callback: function () {
 					cli.getHelpText();
 				}
 			})
@@ -33,77 +22,135 @@ const cli = new AdmiralCli({
 		required: true
 	});
 
-function clusterCommand(cli, command) {
-	cli
-		.commandGroup({
-			name: 'clusterSubCommand',
-			description: 'The operations available to manage a cluster of Kubernetes servers',
-			commands: [
-				new AdmiralCli.Command({
-					name: 'redistribute',
-					description: 'Redistribute pods of a given namespace across the cluster',
-					callback: (cli) => {
-						cli.flag({
-							name: 'namespace',
-							description: 'Which namespace of pods to redistribute',
-							shortFlag: '-n',
-							longFlag: '--namespace',
-							length: 1,
-							required: true
-						});
-						cli.parse();
-						console.log(cli.params.namespace);
-					}
-				}),
-				new AdmiralCli.Command({
-					name: 'summary',
-					description: 'A quick summary of which pods are what nodes',
-					callback: () => require('./commands/cluster/pods-per-node')
-				}),
-				new AdmiralCli.Command({
-					name: '--help',
-					description: 'Shows this help text',
-					callback: function(cli) {
-						cli.getHelpText();
-					}
-				})
-			],
-			required: true
-		});
+function getClusterCommand() {
+	return new AdmiralCli.Command({
+		name: 'cluster',
+		description: 'Operations at the cluster level - redistribute pods, pod summary',
+		subElements: [
+			new AdmiralCli.CommandGroup({
+				name: 'clusterSubCommand',
+				description: 'The operations available to manage a cluster of Kubernetes servers',
+				commands: [
+					new AdmiralCli.Command({
+						name: 'redistribute',
+						description: 'Redistribute pods of a given namespace across the cluster',
+						subElements: [
+							getNamespaceOption()
+						],
+						callback: () => {
+							console.log(`Redistributing pods for ${cli.params.namespace}...`);
+							require('./commands/cluster/redistribute-pods')(cli.params.namespace)
+								.catch(err => console.error(err.stack));
+						}
+					}),
+					new AdmiralCli.Command({
+						name: 'summary',
+						description: 'A quick summary of which pods are what nodes',
+						callback: () => require('./commands/cluster/pods-per-node')
+					})
+				],
+				required: true
+			})
+		]
+	})
 }
 
-function statsCommand(cli, command) {
-	cli
-		.commandGroup({
-			name: 'statsSubCommand',
-			description: 'Viewing stats of a Kubernetes cluster',
-			commands: [
-				new AdmiralCli.Command({
-					name: 'open',
-					description: 'Opens browser tabs to cAdvisor pages for each node in the cluster',
-					callback: () => require('./commands/stats/open-cluster-cAdvisor')
-				}),
-				new AdmiralCli.Command({
-					name: 'summary',
-					description: 'Lists stats on each pod in the cluster - memory and CPU usage.',
-					callback: () => require('./commands/stats/get-all-cadvisor-containers')
-				}),
-				new AdmiralCli.Command({
-					name: '--help',
-					description: 'Show help text',
-					callback: function(cli) {
-						cli.getHelpText();
-					}
-				})
-			],
-			required: true
-		});
+function getNodeCommands() {
+	return new AdmiralCli.Command({
+		name: 'node',
+		description: 'Operations at the node level - restart, decommission',
+		subElements: [
+			new AdmiralCli.CommandGroup({
+				name: 'nodeSubCommand',
+				description: 'Operations on a specific node',
+				commands: [
+					new AdmiralCli.Command({
+						name: 'restart',
+						description: 'Migrate pods off the node and reboot it.',
+						callback: () => {
+							console.log(`Rebooting node: ${cli.params.node}, moving pods from ${cli.params.namespace}...`);
+							require('./commands/node/reboot-node')(cli.params.node, cli.params.namespace)
+								.catch(err => console.error(err.stack));
+						},
+						subElements: [
+							getNamespaceOption()
+						]
+					}),
+					new AdmiralCli.Command({
+						name: 'decommission',
+						description: 'Migrate pods off the node and disable scheduling.',
+						callback: () => {
+							console.log(`Decommissioning node: ${cli.params.node}`);
+							require('./commands/node/decommission-node')(cli.params.node)
+								.catch(err => console.error(err.stack));
+						}
+					}),
+					new AdmiralCli.Command({
+						name: 'enable',
+						description: 'Enable scheduling on a node.',
+						callback: () => {
+							console.log(`Enabling scheduling on node: ${cli.params.node}`);
+							require('./commands/node/make-schedulable')(cli.params.node)
+								.catch(err => console.error(err.stack));
+						}
+					})
+				],
+				required: true
+			}),
+			getNodeOption()
+		]
+	});
 }
 
+function getStatsCommand() {
+	return new AdmiralCli.Command({
+		name: 'stats',
+		description: 'Analytics management - open, summary',
+		subElements: [
+			new AdmiralCli.CommandGroup({
+				name: 'statsSubCommand',
+				description: 'Viewing stats of a Kubernetes cluster',
+				commands: [
+					new AdmiralCli.Command({
+						name: 'open',
+						description: 'Opens browser tabs to cAdvisor pages for each node in the cluster',
+						callback: () => require('./commands/stats/open-cluster-cAdvisor')
+					}),
+					new AdmiralCli.Command({
+						name: 'summary',
+						description: 'Lists stats on each pod in the cluster - memory and CPU usage.',
+						callback: () => require('./commands/stats/get-all-cadvisor-containers')
+					})
+				],
+				required: true
+			})
+		]
+	});
+}
+
+function getNamespaceOption() {
+	return new AdmiralCli.Option({
+		name: 'namespace',
+		description: 'Which namespace of pods to redistribute',
+		shortFlag: '-n',
+		longFlag: '--namespace',
+		length: 1,
+		required: true
+	})
+}
+
+function getNodeOption() {
+	return new AdmiralCli.Option({
+		name: 'node',
+		description: 'Node to restart',
+		longFlag: '--node',
+		required: true,
+		length: 1
+	})
+}
 
 try {
 	cli.parse();
-	console.log(cli.params);
 }
 catch (error) {
 	if (error instanceof AdmiralCli.InvalidInputError) {
@@ -113,5 +160,8 @@ catch (error) {
 	else if (error instanceof AdmiralCli.ConfigError) {
 		console.error('Doh, configured something wrong.', error);
 		process.exit(1);
+	}
+	else {
+		console.error(error.stack);
 	}
 }
