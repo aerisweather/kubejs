@@ -33,6 +33,7 @@
   },
   "devDependencies": {
     "fs-extra": "^0.30.0",
+    "mocha": "^2.4.5",
     "mockery": "^1.6.2",
     "sinon": "^1.17.4"
   }
