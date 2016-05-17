@@ -1,6 +1,8 @@
 Kube JS
 =======
 
+[![Build Status](https://travis-ci.org/aerisweather/kubejs.svg?branch=master)](https://travis-ci.org/aerisweather/kubejs)
+
 A Node.JS utility library for working with Kubernetes v1.x. This library provides some nice abstractions around the `kubectl` management that Kubernetes provides to provide some more advanced features. This assumes you are already familiar with Kubernetes concepts and we will leave that explanation to the numerous other resources.
 
 Installation
