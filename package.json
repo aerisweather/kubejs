@@ -2,7 +2,7 @@
   "name": "kubejs",
   "version": "0.0.1",
   "description": "",
-  "main": "kube-decomission-node.js",
+  "main": "./bin/kubejs",
   "repository": {
     "type": "git",
     "url": "git://github.com/aerisweather/kubejs"
@@ -23,7 +23,7 @@
       "email": "seth@four43.com"
     }
   ],
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "admiral-cli": "^0.12.0",
     "co": "^4.6.0",
