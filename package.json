@@ -10,6 +10,9 @@
   "scripts": {
     "test": "mocha --recursive ./test"
   },
+  "bin": {
+    "kubejs": "./bin/kubejs"
+  },
   "author": {
     "name": "Edan Schwartz",
     "email": "eschwartz@aerisweather.com"
