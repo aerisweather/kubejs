@@ -1,5 +1,4 @@
-Kube JS
-=======
+# KubeJS
 
 [![Build Status](https://travis-ci.org/aerisweather/kubejs.svg?branch=master)](https://travis-ci.org/aerisweather/kubejs)
 
@@ -14,7 +13,7 @@ Installation
 
 	1. Install the [AWS CLI](http://docs.aws.amazon.com/cli/latest/userguide/installing.html) `sudo pip install --upgrade awscli` (working with v1.10.x)
 
-1. Run `npm install -g kubejs` - A `kubejs` binary will be placed on your path
+1. Run `npm install -g kubejs` and a `kubejs` binary will be placed on your path
 
 Usage
 -----
