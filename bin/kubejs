@@ -138,7 +138,7 @@ function getStatsCommand() {
 function getNamespaceOption() {
 	return new AdmiralCli.Option({
 		name: 'namespace',
-		description: 'Which namespace of pods to redistribute',
+		description: 'The namespace to operate on',
 		shortFlag: '-n',
 		longFlag: '--namespace',
 		length: 1,
