@@ -64,9 +64,5 @@ module.exports = function(namespace) {
 };
 
 function formatMem(memInBytes) {
-	return padRight(""+Math.round(memInBytes / 1024 / 10.24) / 100, 7, '0') + 'M';
-}
-
-function padRight(str, l, c) {
-	return str + Array(l - str.length + 1).join(c || " ")
+	return ""+(memInBytes / 1024 / 1024).toFixed(2) + 'M';
 }
