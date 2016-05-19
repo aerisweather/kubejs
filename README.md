@@ -3,23 +3,23 @@ Kube JS
 
 [![Build Status](https://travis-ci.org/aerisweather/kubejs.svg?branch=master)](https://travis-ci.org/aerisweather/kubejs)
 
-A Node.JS utility library for working with Kubernetes v1.x. This library provides some nice abstractions around the `kubectl` management that Kubernetes provides to provide some more advanced features. This assumes you are already familiar with Kubernetes concepts and we will leave that explanation to the numerous other resources.
+A Node.JS utility library for working with Kubernetes v1.x. This library provides some nice abstractions around the `kubectl` management that Kubernetes provides to provide some more advanced features. This assumes you are already familiar with [Kubernetes concepts](http://kubernetes.io/docs/whatisk8s/) and we will leave that explanation to the numerous other resources.
 
 Installation
 ------------
 
-1. Ensure you have a stable version of `kubectl`, configured for your cluster (context)
+1. Ensure you have a stable version of `kubectl`, configured for your cluster (a context)
 
 1. Cloud Management (optional)
 
 	1. Install the [AWS CLI](http://docs.aws.amazon.com/cli/latest/userguide/installing.html) `sudo pip install --upgrade awscli` (working with v1.10.x)
 
-1. Clone this repository
-
-1. Run `npm install`
+1. Run `npm install -g kubejs` - A `kubejs` binary will be placed on your path
 
 Usage
 -----
+
+`kubejs` is wrapped into a nice runnable script, see `~$ kubejs --help` for more information.
 
 Components have been created that correspond to Kubernetes components
 
