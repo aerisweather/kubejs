@@ -26,9 +26,9 @@ Components have been created that correspond to Kubernetes components
 
 The top level cluster management.
 
-#### getAllNodes()
+#### getAllNodes(externalIpOnly)
 
-Returns all the nodes in the currently selected cluster.
+Returns all the nodes in the currently selected cluster. May pass true/false as a filter to only get Nodes with ExternalIps
 
 
 ### Node
