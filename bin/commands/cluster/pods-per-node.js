@@ -6,7 +6,7 @@ const _ = require('lodash');
 
 const cluster = new Cluster();
 
-cluster.getAllNodes()
+cluster.getAllNodes(true)
 	.then(nodes => co(function* () {
 		return yield nodes.reduce((nodePods, node) => Object.assign(nodePods, {
 			[node.name]: node.getAllPods()

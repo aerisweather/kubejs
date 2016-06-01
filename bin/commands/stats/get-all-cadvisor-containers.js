@@ -9,8 +9,7 @@ const cluster = new Cluster();
 module.exports = function(namespace) {
 
 	return co(function*() {
-		const kubeNodes = yield cluster.getAllNodes();
-
+		const kubeNodes = yield cluster.getAllNodes(true);
 		const extNodeIps = yield kubeNodes.map((node) => node.getExternalIp());
 		const cAdvisorUrls = extNodeIps.map((externalIp) =>`http://${externalIp}:4194`);
 		const cACluster = new CACluster(cAdvisorUrls);
