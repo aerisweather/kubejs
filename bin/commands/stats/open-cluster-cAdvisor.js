@@ -6,7 +6,7 @@ const _ = require('lodash');
 
 const cluster = new Cluster();
 
-cluster.getAllNodes()
+cluster.getAllNodes(true)
 	.then(nodes => {
 		return Promise.all(nodes.map((node) => node.getExternalIp()));
 	})
