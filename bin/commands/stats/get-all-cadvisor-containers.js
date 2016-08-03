@@ -42,7 +42,7 @@ module.exports = function(namespace) {
 			console.log(`${pod.name} (${pod.namespace})`);
 			pod._stats.map((stats) => {
 				const condensedStats = condenseStats(stats);
-				console.log(`\t CPU: ${condensedStats.cpu.current}\tMemHot: ${formatMem(condensedStats.memory.hot)}\t MemTotal: ${formatMem(condensedStats.memory.total)}\n`);
+				console.log(`\t CPU: ${formatCpu(condensedStats.cpu.current)}\tMemHot: ${formatMem(condensedStats.memory.hot)}\t MemTotal: ${formatMem(condensedStats.memory.total)}\n`);
 			})
 		});
 	})
@@ -50,9 +50,11 @@ module.exports = function(namespace) {
 
 	function condenseStats(cAdvisorContainerStats) {
 		const latestStats = _.last(cAdvisorContainerStats.stats);
+		const interval = new Date(latestStats.timestamp).getTime() - new Date(cAdvisorContainerStats.stats[cAdvisorContainerStats.stats.length-2].timestamp).getTime();
 		return {
 			cpu:    {
-				current: latestStats.cpu.load_average
+				// https://github.com/google/cadvisor/issues/374#issuecomment-67450072
+				current: latestStats.cpu.usage.total / (1000000000 * latestStats.cpu.usage.per_cpu_usage.length) / interval
 			},
 			memory: {
 				total: latestStats.memory.usage,
@@ -61,6 +63,10 @@ module.exports = function(namespace) {
 		}
 	}
 };
+
+function formatCpu(cpuAsPercent) {
+	return "~" + (cpuAsPercent*100).toFixed((2))+'%';
+}
 
 function formatMem(memInBytes) {
 	return ""+(memInBytes / 1024 / 1024).toFixed(2) + 'M';
