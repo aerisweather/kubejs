@@ -126,12 +126,19 @@ function getStatsCommand() {
 						name: 'summary',
 						description: 'Lists stats on each pod in the cluster - memory and CPU usage.',
 						callback: () => {
-							console.log(`Getting pods for ${cli.params.namespace}`);
+							console.log(`Getting pods for ${cli.params.namespace || 'all namespaces'}`);
 							require('./commands/stats/get-all-cadvisor-containers')(cli.params.namespace)
 								.catch(err => console.error(err.stack));
 						},
 						subElements: [
-							getNamespaceOption()
+						 new AdmiralCli.Option({
+								name: 'namespace',
+								description: 'The namespace to operate on',
+								shortFlag: '-n',
+								longFlag: '--namespace',
+								length: 1,
+								required: false
+							})
 						]
 					})
 				],
