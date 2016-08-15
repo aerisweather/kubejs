@@ -7,8 +7,7 @@ const columnify = require('columnify');
 
 const cluster = new Cluster();
 
-module.exports = function(namespace) {
-
+module.exports = function(opts) {
 	return co(function*() {
 		const kubeNodes = yield cluster.getAllNodes({ externalIpOnly: true });
 		const extNodeIps = yield kubeNodes.map((node) => node.getExternalIp());
@@ -17,7 +16,7 @@ module.exports = function(namespace) {
 
 		// Get containers for our namespace
 		const containersPerNode = yield kubeNodes.map((node) => {
-			return node.getAllPods(namespace);
+			return node.getAllPods(opts.namespace);
 		});
 
 		// Alphabetical list of pods
@@ -42,19 +41,49 @@ module.exports = function(namespace) {
 		const stats = _.flatten(podStats.map(pod =>
 			pod._stats.map(stat => Object.assign({
 				container: stat.labels['io.kubernetes.container.name'],
+				namespace: pod.namespace,
 				pod: pod.name
 			}, condenseStats(stat)))
 		));
 
-		const output = columnify(_.sortBy(stats, s => s.cpu.current * -1).map(stat => ({
+		const aggrStats = _.values(_.groupBy(stats, s => s.container + s.namespace))
+			.map(statsInContainer => ({
+				container: statsInContainer[0].container,
+				namespace: statsInContainer[0].namespace,
+				podCount: statsInContainer.length,
+				cpu: {
+					current: _.sumBy(statsInContainer, 'cpu.current')
+				},
+				memory: {
+					hot: _.sumBy(statsInContainer, 'memory.hot'),
+					total: _.sumBy(statsInContainer, 'memory.total')
+				}
+			}));
+
+		const totalStats = {
+			container: 'Total',
+			namespace: '-',
+			podCount: stats.length,
+			cpu: {
+				current: _.sumBy(stats, 'cpu.current')
+			},
+			memory: {
+				hot: _.sumBy(stats, 'memory.hot'),
+				total: _.sumBy(stats, 'memory.total')
+			}
+		};
+		const sortedAggrStats = _.sortBy(aggrStats, s => s.cpu.current * -1)
+			.concat(totalStats);
+		const aggrCols = sortedAggrStats.map(stat => ({
 			'Container': stat.container,
+			'NS': stat.namespace,
 			'CPU': formatCpu(stat.cpu.current),
 			'Mem Hot': formatMem(stat.memory.hot),
 			'Mem Total': formatMem(stat.memory.total),
-			'Pod': `...${_.last(stat.pod.split('-'))}`
-		})), { columnSplitter: '   ' });
+			'Count': stat.podCount
+		}));
 
-		console.log(output);
+		return console.log(columnify(aggrCols, { columnSplitter: '   ' }));
 	})
 		.catch(err => console.error(err.stack));
 
@@ -82,5 +111,7 @@ function formatCpu(cpuAsPercent) {
 }
 
 function formatMem(memInBytes) {
-	return ""+(memInBytes / 1024 / 1024).toFixed(2) + 'M';
+	const memInGi = memInBytes / 1024 / 1024 / 1024;
+
+	return `${memInGi.toFixed(2)} Gi`;
 }
