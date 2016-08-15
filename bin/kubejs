@@ -47,6 +47,12 @@ function getClusterCommand() {
 						name: 'summary',
 						description: 'A quick summary of which pods are what nodes',
 						callback: () => require('./commands/cluster/pods-per-node')
+					}),
+					new AdmiralCli.Command({
+						name: 'resources',
+						description: `List resources allocated for all containers on the cluster`,
+						callback: () => require('./commands/cluster/resources')()
+							.then(() => process.exit(0), err => { console.error(err.stack); process.exit(1); })
 					})
 				],
 				required: true
