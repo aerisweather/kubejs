@@ -4,7 +4,7 @@ const columnify = require('columnify');
 const Cluster = require('../../../lib/Kubernetes/Cluster');
 const CaCluster = require('../../../lib/cAdvisor/Cluster');
 const Node = require('../../../lib/Kubernetes/Node');
-
+resources();
 function resources() {
   return co(function*() {
     const nodes = yield new Cluster().getAllNodes({
@@ -28,6 +28,18 @@ function resources() {
       })));
     }));
 
+    const caCluster = yield CaCluster.fromKubernetesCluster();
+    const containerStats = yield caCluster.getAllContainerStats();
+    const statsByNode = _.mapValues(_.groupBy(containerStats, 'node'), stats => ({
+      cpu: {
+        current: _.sumBy(stats, 'cpu.current')
+      },
+      memory: {
+        hot: _.sumBy(stats, 'memory.hot'),
+        total: _.sumBy(stats, 'memory.total')
+      }
+    }));
+
     const nodeResources = chunkBy(containers, 'node')
       .map(containersInNode => ({
         name: containersInNode[0].node,
@@ -42,7 +54,8 @@ function resources() {
         capacity: parseResources(
           // Find the matching node JSON
           nodes.find(n => n.metadata.name === containersInNode[0].node).status.capacity
-        )
+        ),
+        stats: statsByNode[containersInNode[0].node]
       }));
     const totalResources = {
       name: 'Total',
@@ -58,23 +71,35 @@ function resources() {
       limits: {
         cpu: _.sumBy(nodeResources, 'limits.cpu'),
         memory: _.sumBy(nodeResources, 'limits.memory')
+      },
+      stats: {
+        cpu: {
+          current: _.sumBy(containerStats, 'cpu.current')
+        },
+        memory: {
+          hot: _.sumBy(containerStats, 'memory.hot'),
+          total: _.sumBy(containerStats, 'memory.total')
+        }
       }
     };
-
-    const caCluster = yield CaCluster.fromKubernetesCluster();
-    const clusterStats = yield caCluster.getClusterStats();
 
     const nodeCpuCols = nodeResources.concat(totalResources)
       .map(node => ({
         'Node': node.name + '    ',
         'CPU Req': printCpu(node.requests.cpu) + ` ${printPerc(node.requests.cpu, node.capacity.cpu)}`,
         'CPU Limit': printCpu(node.limits.cpu) + ` ${printPerc(node.limits.cpu, node.capacity.cpu)}`,
-        'CPU Used': printCpu(clusterStats.cpu.current) + ` ${printPerc(clusterStats.cpu.current, node.capacity.cpu)}`,
+        'CPU Used': printCpu(node.stats.cpu.current) + ` ${printPerc(node.stats.cpu.current, node.capacity.cpu)}`,
         'CPU Cap': printCpu(node.capacity.cpu),
-        'CPU Avail': printCpu(node.capacity.cpu - node.requests.cpu) + ` ${printPerc(node.capacity.cpu - node.requests.cpu, node.capacity.cpu)}`,
-        '|': '|',
+        'CPU Avail': printCpu(node.capacity.cpu - node.requests.cpu) + ` ${printPerc(node.capacity.cpu - node.requests.cpu, node.capacity.cpu)}`
+      }));
+
+    const nodeMemCols = nodeResources.concat(totalResources)
+      .map(node => ({
+        'Node': node.name + '    ',
         'Mem Req': printMem(node.requests.memory) + ` ${printPerc(node.requests.memory, node.capacity.memory)}`,
         'Mem Limit': printMem(node.limits.memory) + ` ${printPerc(node.limits.memory, node.capacity.memory)}`,
+        'Mem Used Hot': printMem(node.stats.memory.hot) + ` ${printPerc(node.stats.memory.hot, node.capacity.memory)}`,
+        'Mem Used Total': printMem(node.stats.memory.total) + ` ${printPerc(node.stats.memory.total, node.capacity.memory)}`,
         'Mem Cap': printMem(node.capacity.memory),
         'Mem Avail': printMem(node.capacity.memory - node.requests.memory) + ` ${printPerc(node.capacity.memory - node.requests.memory, node.capacity.memory)}`
       }));
@@ -109,6 +134,8 @@ function resources() {
     const colOpts = { columnSplitter: '   ' };
     const output = `
 ${columnify(nodeCpuCols, colOpts)}
+
+${columnify(nodeMemCols, colOpts)}
 
 ${columnify(containerCols, colOpts)}
   `.trim();
