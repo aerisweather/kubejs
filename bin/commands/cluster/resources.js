@@ -2,6 +2,7 @@ const co = require('co');
 const _ = require('lodash');
 const columnify = require('columnify');
 const Cluster = require('../../../lib/Kubernetes/Cluster');
+const CaCluster = require('../../../lib/cAdvisor/Cluster');
 const Node = require('../../../lib/Kubernetes/Node');
 
 function resources() {
@@ -60,11 +61,15 @@ function resources() {
       }
     };
 
+    const caCluster = yield CaCluster.fromKubernetesCluster();
+    const clusterStats = yield caCluster.getClusterStats();
+
     const nodeCpuCols = nodeResources.concat(totalResources)
       .map(node => ({
         'Node': node.name + '    ',
         'CPU Req': printCpu(node.requests.cpu) + ` ${printPerc(node.requests.cpu, node.capacity.cpu)}`,
         'CPU Limit': printCpu(node.limits.cpu) + ` ${printPerc(node.limits.cpu, node.capacity.cpu)}`,
+        'CPU Used': printCpu(clusterStats.cpu.current) + ` ${printPerc(clusterStats.cpu.current, node.capacity.cpu)}`,
         'CPU Cap': printCpu(node.capacity.cpu),
         'CPU Avail': printCpu(node.capacity.cpu - node.requests.cpu) + ` ${printPerc(node.capacity.cpu - node.requests.cpu, node.capacity.cpu)}`,
         '|': '|',
