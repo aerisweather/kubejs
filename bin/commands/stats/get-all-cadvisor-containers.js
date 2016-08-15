@@ -3,6 +3,7 @@ const co = require('co');
 const Cluster = require('../../../lib/Kubernetes/Cluster');
 const CACluster = require('../../../lib/cAdvisor/Cluster');
 const _ = require('lodash');
+const columnify = require('columnify');
 
 const cluster = new Cluster();
 
@@ -38,34 +39,46 @@ module.exports = function(namespace) {
 				})
 		});
 
-		podStats.map((pod) => {
-			console.log(`${pod.name} (${pod.namespace})`);
-			pod._stats.map((stats) => {
-				const condensedStats = condenseStats(stats);
-				console.log(`\t CPU: ${formatCpu(condensedStats.cpu.current)}\tMemHot: ${formatMem(condensedStats.memory.hot)}\t MemTotal: ${formatMem(condensedStats.memory.total)}\n`);
-			})
-		});
+		const stats = _.flatten(podStats.map(pod =>
+			pod._stats.map(stat => Object.assign({
+				container: stat.labels['io.kubernetes.container.name'],
+				pod: pod.name
+			}, condenseStats(stat)))
+		));
+
+		const output = columnify(_.sortBy(stats, s => s.cpu.current * -1).map(stat => ({
+			'Container': stat.container,
+			'CPU': formatCpu(stat.cpu.current),
+			'Mem Hot': formatMem(stat.memory.hot),
+			'Mem Total': formatMem(stat.memory.total),
+			'Pod': `...${_.last(stat.pod.split('-'))}`
+		})), { columnSplitter: '   ' });
+
+		console.log(output);
 	})
 		.catch(err => console.error(err.stack));
 
-	function condenseStats(cAdvisorContainerStats) {
-		const latestStats = _.last(cAdvisorContainerStats.stats);
-		const interval = new Date(latestStats.timestamp).getTime() - new Date(cAdvisorContainerStats.stats[cAdvisorContainerStats.stats.length-2].timestamp).getTime();
+	function condenseStats(containerStats) {
+		const firstRecord = _.first(containerStats.stats);
+		const lastRecord = _.last(containerStats.stats);
+		const nanoInterval = 1e6 * (new Date(lastRecord.timestamp) - new Date(firstRecord.timestamp));
+		// See https://github.com/google/cadvisor/issues/832
+		const cpuUsage = (lastRecord.cpu.usage.total - firstRecord.cpu.usage.total) / nanoInterval;
+
 		return {
 			cpu:    {
-				// https://github.com/google/cadvisor/issues/374#issuecomment-67450072
-				current: latestStats.cpu.usage.total / (1000000000 * latestStats.cpu.usage.per_cpu_usage.length) / interval
+				current: cpuUsage
 			},
 			memory: {
-				total: latestStats.memory.usage,
-				hot:   latestStats.memory.working_set
+				total: lastRecord.memory.usage,
+				hot: lastRecord.memory.working_set
 			}
 		}
 	}
 };
 
 function formatCpu(cpuAsPercent) {
-	return "~" + (cpuAsPercent*100).toFixed((2))+'%';
+	return (cpuAsPercent*100).toFixed((2))+'%';
 }
 
 function formatMem(memInBytes) {
