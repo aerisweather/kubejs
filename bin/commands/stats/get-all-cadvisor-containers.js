@@ -9,42 +9,8 @@ const cluster = new Cluster();
 
 module.exports = function(opts) {
 	return co(function*() {
-		const kubeNodes = yield cluster.getAllNodes({ externalIpOnly: true });
-		const extNodeIps = yield kubeNodes.map((node) => node.getExternalIp());
-		const cAdvisorUrls = extNodeIps.map((externalIp) =>`http://${externalIp}:4194`);
-		const cACluster = new CACluster(cAdvisorUrls);
-
-		// Get containers for our namespace
-		const containersPerNode = yield kubeNodes.map((node) => {
-			return node.getAllPods(opts.namespace);
-		});
-
-		// Alphabetical list of pods
-		const pods = _.flatten(containersPerNode).sort((a, b) => {
-			if (a.name < b.name) {
-				return -1;
-			}
-			return 1;
-		});
-
-		const podStats = yield pods.map((pod) => {
-			return pod.getContainerIds()
-				.then((containerIds) => {
-					return Promise.all(containerIds.map((containerId) => cACluster.getContainerStats(containerId)));
-				})
-				.then((containerStats) => {
-					pod._stats = containerStats;
-					return pod;
-				})
-		});
-
-		const stats = _.flatten(podStats.map(pod =>
-			pod._stats.map(stat => Object.assign({
-				container: stat.labels['io.kubernetes.container.name'],
-				namespace: pod.namespace,
-				pod: pod.name
-			}, condenseStats(stat)))
-		));
+		const cACluster = yield CACluster.fromKubernetesCluster();
+		const stats = yield cACluster.getAllContainerStats(opts.namespace);
 
 		const aggrStats = _.values(_.groupBy(stats, s => s.container + s.namespace))
 			.map(statsInContainer => ({
