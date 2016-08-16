@@ -1,3 +1,9 @@
+# v1.2.0
+
+* `stats summary`: show all namespaces, by default
+* `stats summary`: aggregate values by container
+* `cluster resources`: Include cAdvisor stats in output
+
 # v1.1.1
 
 * Fix CPU calculation in `stats summary`
