@@ -1,3 +1,7 @@
+# v1.3.0
+
+* `cluster audit`: Shows ReplicationControllers which don't have limits/requests set.
+
 # v1.2.0
 
 * `stats summary`: show all namespaces, by default

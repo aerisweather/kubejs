@@ -32,6 +32,12 @@ function getClusterCommand() {
 				description: 'The operations available to manage a cluster of Kubernetes servers',
 				commands: [
 					new AdmiralCli.Command({
+						name: 'audit',
+						description: `Lists RCs that are missing limits of some sort`,
+						callback: () => require('./commands/cluster/audit')()
+							.then(() => process.exit(0), err => { console.error(err.stack); process.exit(1); })
+					}),
+					new AdmiralCli.Command({
 						name: 'redistribute',
 						description: 'Redistribute pods of a given namespace across the cluster',
 						subElements: [
@@ -44,15 +50,15 @@ function getClusterCommand() {
 						}
 					}),
 					new AdmiralCli.Command({
-						name: 'summary',
-						description: 'A quick summary of which pods are what nodes',
-						callback: () => require('./commands/cluster/pods-per-node')
-					}),
-					new AdmiralCli.Command({
 						name: 'resources',
 						description: `List resources allocated for all containers on the cluster`,
 						callback: () => require('./commands/cluster/resources')()
 							.then(() => process.exit(0), err => { console.error(err.stack); process.exit(1); })
+					}),
+					new AdmiralCli.Command({
+						name: 'summary',
+						description: 'A quick summary of which pods are what nodes',
+						callback: () => require('./commands/cluster/pods-per-node')
 					})
 				],
 				required: true
