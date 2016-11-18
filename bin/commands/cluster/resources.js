@@ -4,28 +4,33 @@ const columnify = require('columnify');
 const Cluster = require('../../../lib/Kubernetes/Cluster');
 const CaCluster = require('../../../lib/cAdvisor/Cluster');
 const Node = require('../../../lib/Kubernetes/Node');
+const filterAsync = require('../../../lib/util/filter-async');
 
 function resources() {
   return co(function*() {
-    const nodes = yield new Cluster().getAllNodes()
-      .then(nodes => Promise.all(nodes.map(n => n.getJson())));
+    const nodesJson = yield filterAsync(
+      yield new Cluster().getAllNodesJson(),
+      // Only include nodes with access to cAdvisory (ie, not master)
+      nodeJson => Node.fromJson(nodeJson).hasCAdvisor()
+    );
 
     // Flatten down to a  list of containers
-    const containers = yield flatMapAsync(nodes, node => co(function*() {
-      const podsInNode = yield new Node(node.metadata.name).getAllPods();
-      const podsJson = yield podsInNode.map(p => p.getJson());
+    const nodeNames = nodesJson.map(n => n.metadata.name);
+    const podsJson = yield new Cluster().getAllPodsJson();
+    const containers = podsJson.map(pod => pod.spec.containers.map(c => ({
+      name: c.name,
+      pod: pod.metadata.name,
+      namespace: pod.metadata.namespace,
+      node: pod.spec.nodeName,
+      requests: c.resources.requests ? parseResources(c.resources.requests) : {},
+      limits: c.resources.limits ? parseResources(c.resources.limits) : {}
+    })))
+      // flatten
+      .reduce((arr, i) => arr.concat(i), [])
+      // only include containers from nodes w/cAdvisor
+      .filter(c => _.includes(nodeNames, c.node));
 
-      return podsJson.map(pod => pod.spec.containers.map(c => ({
-        name: c.name,
-        pod: pod.metadata.name,
-        namespace: pod.metadata.namespace,
-        node: node.metadata.name,
-        requests: c.resources.requests ? parseResources(c.resources.requests) : {},
-        limits: c.resources.limits ? parseResources(c.resources.limits) : {}
-      })));
-    }));
-
-    const caCluster = yield CaCluster.fromKubernetesCluster();
+    const caCluster = yield CaCluster.fromKubernetesNodes(nodesJson.map(Node.fromJson));
     const containerStats = yield caCluster.getAllContainerStats();
     const statsByNode = _.mapValues(_.groupBy(containerStats, 'node'), stats => ({
       cpu: {
@@ -50,7 +55,7 @@ function resources() {
         },
         capacity: parseResources(
           // Find the matching node JSON
-          nodes.find(n => n.metadata.name === containersInNode[0].node).status.capacity
+          nodesJson.find(n => n.metadata.name === containersInNode[0].node).status.capacity
         ),
         stats: statsByNode[containersInNode[0].node]
       }));
