@@ -7,10 +7,7 @@ const Node = require('../../../lib/Kubernetes/Node');
 
 function resources() {
   return co(function*() {
-    const nodes = yield new Cluster().getAllNodes({
-      // exclude master node
-      externalIpOnly: true
-    })
+    const nodes = yield new Cluster().getAllNodes()
       .then(nodes => Promise.all(nodes.map(n => n.getJson())));
 
     // Flatten down to a  list of containers
