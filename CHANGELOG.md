@@ -1,3 +1,7 @@
+# v1.3.1
+
+* Fix `kubejs cluster resources` to work with k8s v1.4.4
+
 # v1.3.0
 
 * `cluster audit`: Shows ReplicationControllers which don't have limits/requests set.
